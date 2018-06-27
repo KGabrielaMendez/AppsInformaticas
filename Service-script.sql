@@ -1,13 +1,8 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 5.0                                    */
-/* Created on:     03/06/2018 20:14:46                          */
+/* Created on:     27/06/2018 7:55:41                           */
 /*==============================================================*/
 
-
-Create database systaxi
-go
-use systaxi
-go
 
 drop table if exists CAT_CARRERA;
 
@@ -23,9 +18,11 @@ drop table if exists CAT_UNIDADES;
 
 drop table if exists CAT_USUARIOS;
 
+drop table if exists CONDUCTOR;
+
 drop table if exists LOGIN;
 
-drop table if exists ROL_USER;
+drop table if exists TIPO_ENCOMIENDA;
 
 /*==============================================================*/
 /* Table: CAT_CARRERA                                           */
@@ -33,12 +30,13 @@ drop table if exists ROL_USER;
 create table CAT_CARRERA
 (
    ID_CARRERA           int not null auto_increment,
-   DESCRIPCION_CAR      varchar(1000),
+   DESCRIPCION_CAR      varchar(1000) comment 'Puede incluir nr de casa',
    DISTANCIA_CAR        int,
    TIEMPOESPERAMIN_CAR  int,
    COSTO_CAR            decimal,
    LATITUD_CAR          decimal,
    LONGITUD_CAR         decimal,
+   DIRECCION_CAR        varchar(100),
    primary key (ID_CARRERA)
 );
 
@@ -62,6 +60,7 @@ create table CAT_COOPERATIVAS
 create table CAT_ENCOMIENDA
 (
    ID_ENCOMIENDA        int not null auto_increment,
+   IDTIPOENCOM          int,
    DESCRIPCION_ENC      varchar(1000),
    DISTANCIAMIN_ENC     int,
    TIEMPOESPERAMIN_ENC  int,
@@ -69,8 +68,11 @@ create table CAT_ENCOMIENDA
    COSTOENC_MAX_ENC     decimal,
    LATITUD_ENC          decimal,
    LONGITUD_ENC         decimal,
+   DIRECCION_ENC        varchar(100),
    primary key (ID_ENCOMIENDA)
 );
+
+alter table CAT_ENCOMIENDA comment 'PUEDE INCLUIR TAMAÑO ENCOMIENDA';
 
 /*==============================================================*/
 /* Table: CAT_PEDIDOS                                           */
@@ -78,9 +80,11 @@ create table CAT_ENCOMIENDA
 create table CAT_PEDIDOS
 (
    ID_PEDIDO            int not null auto_increment,
-   ID_ROLUSER           int not null,
    ID_ENCOMIENDA        int,
    ID_CARRERA           int,
+   IDCONDUCTOR          int,
+   ID_US                int,
+   FECHA                datetime,
    primary key (ID_PEDIDO)
 );
 
@@ -131,6 +135,17 @@ create table CAT_USUARIOS
 );
 
 /*==============================================================*/
+/* Table: CONDUCTOR                                             */
+/*==============================================================*/
+create table CONDUCTOR
+(
+   IDCONDUCTOR          int not null auto_increment,
+   ID_US                int not null,
+   ID_UNI               int,
+   primary key (IDCONDUCTOR)
+);
+
+/*==============================================================*/
 /* Table: LOGIN                                                 */
 /*==============================================================*/
 create table LOGIN
@@ -143,15 +158,19 @@ create table LOGIN
 );
 
 /*==============================================================*/
-/* Table: ROL_USER                                              */
+/* Table: TIPO_ENCOMIENDA                                       */
 /*==============================================================*/
-create table ROL_USER
+create table TIPO_ENCOMIENDA
 (
-   ID_ROLUSER           int not null auto_increment,
-   ID_US                int not null,
-   ID_UNI               int,
-   primary key (ID_ROLUSER)
+   IDTIPOENCOM          int not null,
+   DESCRIPCION          varchar(100),
+   primary key (IDTIPOENCOM)
 );
+
+alter table TIPO_ENCOMIENDA comment 'tabla q contiene el tipo de encomiendas';
+
+alter table CAT_ENCOMIENDA add constraint FK_TIPOENCOMIENDA_ENCOMIEND foreign key (IDTIPOENCOM)
+      references TIPO_ENCOMIENDA (IDTIPOENCOM) on delete restrict on update restrict;
 
 alter table CAT_PEDIDOS add constraint FK_CARR_PEDIDO foreign key (ID_CARRERA)
       references CAT_CARRERA (ID_CARRERA) on delete restrict on update restrict;
@@ -159,8 +178,11 @@ alter table CAT_PEDIDOS add constraint FK_CARR_PEDIDO foreign key (ID_CARRERA)
 alter table CAT_PEDIDOS add constraint FK_ENCOMIEN_PEDIDO foreign key (ID_ENCOMIENDA)
       references CAT_ENCOMIENDA (ID_ENCOMIENDA) on delete restrict on update restrict;
 
-alter table CAT_PEDIDOS add constraint FK_ROLUSER_PEDIDO foreign key (ID_ROLUSER)
-      references ROL_USER (ID_ROLUSER) on delete restrict on update restrict;
+alter table CAT_PEDIDOS add constraint FK_ROLUSER_PEDIDO foreign key (IDCONDUCTOR)
+      references CONDUCTOR (IDCONDUCTOR) on delete restrict on update restrict;
+
+alter table CAT_PEDIDOS add constraint FK_USER_PEDIDO foreign key (ID_US)
+      references CAT_USUARIOS (ID_US) on delete restrict on update restrict;
 
 alter table CAT_UNIDADES add constraint FK_COOP_UNIDAD foreign key (ID_COOP)
       references CAT_COOPERATIVAS (ID_COOP) on delete restrict on update restrict;
@@ -168,12 +190,12 @@ alter table CAT_UNIDADES add constraint FK_COOP_UNIDAD foreign key (ID_COOP)
 alter table CAT_USUARIOS add constraint FK_LOGIN_USER foreign key (ID_LOG)
       references LOGIN (ID_LOG) on delete restrict on update restrict;
 
-alter table LOGIN add constraint FK_ROL_LOGIN foreign key (ID_ROL)
-      references CAT_ROL (ID_ROL) on delete restrict on update restrict;
-
-alter table ROL_USER add constraint FK_UNIDAD_ROLUSER foreign key (ID_UNI)
+alter table CONDUCTOR add constraint FK_UNIDAD_ROLUSER foreign key (ID_UNI)
       references CAT_UNIDADES (ID_UNI) on delete restrict on update restrict;
 
-alter table ROL_USER add constraint FK_USUARIO_ROLUSER foreign key (ID_US)
+alter table CONDUCTOR add constraint FK_USUARIO_ROLUSER foreign key (ID_US)
       references CAT_USUARIOS (ID_US) on delete restrict on update restrict;
+
+alter table LOGIN add constraint FK_ROL_LOGIN foreign key (ID_ROL)
+      references CAT_ROL (ID_ROL) on delete restrict on update restrict;
 
